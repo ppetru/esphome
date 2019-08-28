@@ -11,6 +11,10 @@ static const uint8_t MHZ19_COMMAND_GET_PPM[] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x
 static const uint8_t MHZ19_COMMAND_ABC_ENABLE[] = {0xFF, 0x01, 0x79, 0xA0, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t MHZ19_COMMAND_ABC_DISABLE[] = {0xFF, 0x01, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t MHZ19_COMMAND_CALIBRATE_ZERO[] = {0xFF, 0x01, 0x87, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t MHZ19_COMMAND_SET_RANGE_1000[] = {0xFF, 0x01, 0x99, 0x00, 0x03, 0xE8, 0x00, 0x00};
+static const uint8_t MHZ19_COMMAND_SET_RANGE_2000[] = {0xFF, 0x01, 0x99, 0x00, 0x07, 0xD0, 0x00, 0x00};
+static const uint8_t MHZ19_COMMAND_SET_RANGE_3000[] = {0xFF, 0x01, 0x99, 0x00, 0x0B, 0xB8, 0x00, 0x00};
+static const uint8_t MHZ19_COMMAND_SET_RANGE_5000[] = {0xFF, 0x01, 0x99, 0x00, 0x13, 0x88, 0x00, 0x00};
 
 uint8_t mhz19_checksum(const uint8_t *command) {
   uint8_t sum = 0;
@@ -25,6 +29,9 @@ void MHZ19Component::setup() {
     this->abc_enable();
   } else if (this->abc_boot_logic_ == MHZ19_ABC_DISABLED) {
     this->abc_disable();
+  }
+  if (this->range_ != 0) {
+    this->range();
   }
 }
 
@@ -76,6 +83,24 @@ void MHZ19Component::abc_disable() {
   this->mhz19_write_command_(MHZ19_COMMAND_ABC_DISABLE, nullptr);
 }
 
+void MHZ19Component::range() {
+  ESP_LOGD(TAG, "MHZ19 Setting range to %d", this->range_);
+  switch (this->range_) {
+  case 1000:
+    this->mhz19_write_command_(MHZ19_COMMAND_SET_RANGE_1000, nullptr);
+    break;
+  case 2000:
+    this->mhz19_write_command_(MHZ19_COMMAND_SET_RANGE_2000, nullptr);
+    break;
+  case 3000:
+    this->mhz19_write_command_(MHZ19_COMMAND_SET_RANGE_3000, nullptr);
+    break;
+  case 5000:
+    this->mhz19_write_command_(MHZ19_COMMAND_SET_RANGE_5000, nullptr);
+    break;
+  }
+}
+
 bool MHZ19Component::mhz19_write_command_(const uint8_t *command, uint8_t *response) {
   this->flush();
   this->write_array(command, MHZ19_REQUEST_LENGTH);
@@ -99,6 +124,7 @@ void MHZ19Component::dump_config() {
   } else if (this->abc_boot_logic_ == MHZ19_ABC_DISABLED) {
     ESP_LOGCONFIG(TAG, "  Automatic baseline calibration disabled on boot");
   }
+  ESP_LOGCONFIG(TAG, "  Range: %d", this->range_);
 }
 
 }  // namespace mhz19

@@ -9,6 +9,7 @@ from esphome.const import CONF_CO2, CONF_ID, CONF_TEMPERATURE, ICON_PERIODIC_TAB
 DEPENDENCIES = ['uart']
 
 CONF_AUTOMATIC_BASELINE_CALIBRATION = 'automatic_baseline_calibration'
+CONF_RANGE = 'range'
 
 mhz19_ns = cg.esphome_ns.namespace('mhz19')
 MHZ19Component = mhz19_ns.class_('MHZ19Component', cg.PollingComponent, uart.UARTDevice)
@@ -21,6 +22,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Required(CONF_CO2): sensor.sensor_schema(UNIT_PARTS_PER_MILLION, ICON_PERIODIC_TABLE_CO2, 0),
     cv.Optional(CONF_TEMPERATURE): sensor.sensor_schema(UNIT_CELSIUS, ICON_THERMOMETER, 0),
     cv.Optional(CONF_AUTOMATIC_BASELINE_CALIBRATION): cv.boolean,
+    cv.Optional(CONF_RANGE): cv.int_range(min=1000, max=5000),
 }).extend(cv.polling_component_schema('60s')).extend(uart.UART_DEVICE_SCHEMA)
 
 
@@ -39,6 +41,9 @@ def to_code(config):
 
     if CONF_AUTOMATIC_BASELINE_CALIBRATION in config:
         cg.add(var.set_abc_enabled(config[CONF_AUTOMATIC_BASELINE_CALIBRATION]))
+
+    if CONF_RANGE in config:
+        cg.add(var.set_range(config[CONF_RANGE]))
 
 
 CALIBRATION_ACTION_SCHEMA = maybe_simple_id({
